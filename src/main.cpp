@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "WebServer.h"
+#include "Utils.h"
 
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
@@ -9,8 +10,12 @@
 #include <SPIFFS.h>
 #endif
 
+#include <functional>
+
 #define AP_SSID "SprinklerController"
 #define AP_PASSWD "87654321"
+
+WiFiUDP g_udp;
 
 void setup() 
 {
@@ -31,4 +36,5 @@ void setup()
 void loop() 
 {
   // put your main code here, to run repeatedly:
+  
 }

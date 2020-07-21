@@ -10,31 +10,23 @@
 
 #endif
 
-
-
-String request_handler(const String& var)
-{
-  Serial.println(var);
-  if(var == "STATE")
-  {
-    if(digitalRead(ledPin))
-    {
-      ledState = "ON";
-    }
-    else
-    {
-      ledState = "OFF";
-    }
-    Serial.print(ledState);
-    return ledState;
-  }
-  return String();
-}
-
 void WebServer::start() 
 {
-    m_webServer.on("/index", HTTP_ANY, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/index.htm");
-  });
   
+    m_webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/index.html", String(), false);
+    });
+
+    m_webServer.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/style.css", "text/css");
+    });
+
+
+
+  m_webServer.onNotFound([](AsyncWebServerRequest *request){ request->send(404); });
+  // m_webServer.onFileUpload(onUpload);
+  m_webServer.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){});
+
+  m_webServer.begin();
+
 }
