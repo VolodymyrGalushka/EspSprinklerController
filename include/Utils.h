@@ -1,11 +1,7 @@
-#include <Arduino.h>
+#ifndef __UTILS_H__
+#define __UTILS_H__
 
 
-#include <WiFiUdp.h>
 
-extern WiFiUDP g_udp;
 
-namespace utils
-{
-    time_t getNtpTime();
-}
+#endif // __UTILS_H__

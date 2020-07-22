@@ -1,12 +1,17 @@
 #include "McuClock.h"
-#include "Utils.h"
 
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 #include <Arduino.h>
 
 #define __STDC_WANT_LIB_EXT1__ 1
 #include <ctime>
+#include <sstream>
 
+String weekDays[7]={"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
+//Month names
+String months[12]={"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 
 void McuClock::update() 
 {
@@ -58,21 +63,34 @@ void McuClock::update()
 // would continue to correct for an entire hour that is 24 - startingHour. 
 }
 
+std::string McuClock::getTimeString() const
+{
+    std::string time_s{""};
+    std::ostringstream time_stream(time_s);
+    time_stream << days << "--" << hours << ":" << minutes << ":" << seconds;
+    return time_stream.str();
+}
+
 void McuClock::doNtpSync() 
 {
-   auto ntp_time = utils::getNtpTime();
-   if(ntp_time == 0) return;
+    WiFiUDP ntpUDP;
+    NTPClient timeClient(ntpUDP, "pool.ntp.org");
+    timeClient.begin();
+    timeClient.setTimeOffset(7*3600);
+    timeClient.forceUpdate();
 
-//    putenv("TZ=Asia/Singapore");
+    auto epochTime = timeClient.getEpochTime();
 
-   struct tm* ntp_tm = localtime(&ntp_time);
-   seconds = ntp_tm->tm_sec;
-   minutes = ntp_tm->tm_min;
-   hours = ntp_tm->tm_hour;
-   days = ntp_tm->tm_yday;
-   startingHour = hours;
+    struct tm *ntp_tm = gmtime ((time_t *)&epochTime);
+    if(ntp_tm == 0 || ntp_tm == nullptr) return; 
+    seconds = ntp_tm->tm_sec;
+    minutes = ntp_tm->tm_min;
+    hours = ntp_tm->tm_hour;
+    days = ntp_tm->tm_yday;
+    startingHour = hours;
 
-   correctedToday = 1;
+    correctedToday = 1;
+    timeClient.end();
 }
 
 void McuClock::setTime(int32_t s, int32_t m, int32_t h, int32_t d) 
