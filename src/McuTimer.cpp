@@ -43,12 +43,13 @@ void McuTimer::update()
 
     if(m_current >= m_interval)
     {
-        for(auto handler : m_handlers)
+        for(auto& handler : m_handlers)
         {
             handler();
         }
+        m_current = 0;
     }
-    m_current = 0;
+    
 
     if(!m_repeat) m_stop = true;
 

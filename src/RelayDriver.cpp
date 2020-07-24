@@ -5,7 +5,7 @@ RelayDriver::RelayDriver(uint8_t controlPin, RelayState initialState) :
     m_controlPin{controlPin},
     m_state{initialState}
 {
-    
+    pinMode(m_controlPin, OUTPUT);
 }
 
 void RelayDriver::toggle() 

@@ -2,7 +2,7 @@
 
 MoistureSensorDriver::MoistureSensorDriver(uint8_t dataPin) : m_dataPin{dataPin}
 {
-    
+    pinMode(m_dataPin, INPUT);
 }
 
 

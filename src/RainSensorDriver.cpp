@@ -5,7 +5,7 @@ const int sensorMax = 1024;  // sensor maximum
 
 RainSensorDriver::RainSensorDriver(std::uint8_t dataPin) : m_dataPin{dataPin}
 {
-    
+    pinMode(m_dataPin, INPUT);
 }
 
 
