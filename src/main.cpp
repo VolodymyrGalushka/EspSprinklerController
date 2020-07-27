@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include "WebServer.h"
-#include "McuTimer.h"
 #include "McuClock.h"
 #include "RelayDriver.h"
 #include "Utils.h"
@@ -13,6 +12,8 @@
 #include <SPIFFS.h>
 #endif
 
+#include <Ticker.h>
+
 #include <functional>
 #include <memory>
 
@@ -23,7 +24,6 @@ void toggleValve1();
 
 
 McuClock g_clock{};
-std::unique_ptr<McuTimer> g_timer{nullptr};
 std::unique_ptr<RelayDriver> valve_1{new RelayDriver(D1)};
 
 void setup() 
@@ -53,9 +53,6 @@ void setup()
 
   g_clock.doNtpSync();
 
-  g_timer.reset(new McuTimer(10, true));
-  g_timer->addIntervalHandler(toggleValve1);
-  g_timer->start();
 }
 
 void toggleValve1()
@@ -73,9 +70,6 @@ void loop()
   Serial.print(timestr.c_str());
   Serial.println();
 
-  g_timer->update();
-  Serial.print("Timer: ");
-  Serial.printf("%u\n", g_timer->currentSeconds());
 
   delay(5000);
   
