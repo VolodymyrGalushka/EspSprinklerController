@@ -13,7 +13,9 @@ class MoistureSensorDriver
         ~MoistureSensorDriver() = default;
 
         void        calibrate0();
+        void        set0(int32_t value);
         void        calibrate100();
+        void        set100(int32_t value);
 
         int32_t     getValue();
         int32_t     getPercents();

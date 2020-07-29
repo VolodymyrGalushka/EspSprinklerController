@@ -1,7 +1,11 @@
 #include <Arduino.h>
+#include "main.h"
 #include "WebServer.h"
 #include "McuClock.h"
+#include "McuConfig.h"
 #include "RelayDriver.h"
+#include "MoistureSensorDriver.h"
+#include "RainSensorDriver.h"
 #include "Utils.h"
 
 #ifdef ESP8266
@@ -13,6 +17,7 @@
 #endif
 
 #include <Ticker.h>
+#include <CircularBuffer.h>
 
 #include <functional>
 #include <memory>
@@ -20,11 +25,13 @@
 #define AP_SSID "SprinklerController"
 #define AP_PASSWD "87654321"
 
-void toggleValve1();
-
-
 McuClock g_clock{};
-std::unique_ptr<RelayDriver> valve_1{new RelayDriver(D1)};
+CircularBuffer<std::string, 50> g_log_buf;
+std::map<int, std::unique_ptr<RelayDriver>> g_valves;
+std::unique_ptr<McuConfig> g_mcu_config{nullptr};
+std::unique_ptr<MoistureSensorDriver> g_moist_sensor{nullptr};
+std::unique_ptr<RainSensorDriver> g_rain_sensor{nullptr};
+
 
 void setup() 
 {
@@ -55,9 +62,9 @@ void setup()
 
 }
 
-void toggleValve1()
+void toggleValve(uint8_t number)
 {
-  valve_1->toggle();
+  g_valves[number]->toggle();
 }
 
 void loop() 
@@ -73,4 +80,49 @@ void loop()
 
   delay(5000);
   
+}
+
+
+void configure() 
+{
+    g_mcu_config.reset(new McuConfig());
+    SPIFFS.begin();
+    auto exists = SPIFFS.exists("/mcu_config.json");
+    SPIFFS.end();
+    if(!exists)
+    {
+        g_log_buf.unshift("Mcu config file doesn't exist!");
+        return;
+    }
+    else
+    {
+        g_mcu_config->deserializeFromFile("/mcu_config.json");
+    }
+
+    //create valve drivers
+    for(const auto& valve : g_mcu_config->valves())
+    {
+        auto valve_it = g_valves.find(valve.first);
+        if(valve_it != g_valves.end())
+        {
+            //update
+        }
+        else
+        {
+          g_valves[valve.first] = std::move(std::unique_ptr<RelayDriver>(new RelayDriver(valve.second.pin)));
+        }
+    }
+
+    if(g_mcu_config->rainSensorEnabled)
+    {
+        g_rain_sensor.reset(new RainSensorDriver(g_mcu_config->rainSensorPin));
+    }
+
+    if(g_mcu_config->moistureSensorEnabled)
+    {
+        g_moist_sensor.reset(new MoistureSensorDriver(g_mcu_config->moistureSensorPin));
+        g_moist_sensor->set0(g_mcu_config->moistLow);
+        g_moist_sensor->set100(g_mcu_config->moistHigh);
+    }
+
 }
