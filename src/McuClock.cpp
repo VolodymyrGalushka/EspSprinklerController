@@ -71,6 +71,16 @@ std::string McuClock::getTimeString() const
     return time_stream.str();
 }
 
+int McuClock::getDayOfWeek() const
+{
+    
+}
+
+int McuClock::getDayOfMonth() const
+{
+    
+}
+
 void McuClock::doNtpSync() 
 {
     WiFiUDP ntpUDP;
@@ -93,7 +103,7 @@ void McuClock::doNtpSync()
     timeClient.end();
 }
 
-void McuClock::setTime(int32_t s, int32_t m, int32_t h, int32_t d) 
+void McuClock::setTime(int s, int m, int h, int d) 
 {
     seconds = s;
     minutes = m;

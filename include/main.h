@@ -3,6 +3,7 @@
 
 void configure();
 void toggleValve(uint8_t number);
+void handleTriggers();
 
 
 #endif // __MAIN_H__

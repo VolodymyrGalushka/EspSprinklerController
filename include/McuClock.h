@@ -11,23 +11,26 @@ class McuClock
         ~McuClock() = default;
 
         void                doNtpSync();
-        void                setTime(int32_t s, int32_t m, int32_t h, int32_t d);
+        void                setTime(int s, int m, int h, int d);
         void                update();
         std::string         getTimeString() const;
 
+        int                 getDayOfWeek() const;
+        int                 getDayOfMonth() const;
+
     private:
-        uint64_t            timeNow{0};
-        uint64_t            timeLast{0};
-        int32_t             startingHour{0}; // set your starting hour here, not below at int hour. This ensures accurate daily correction of time
-        int32_t             seconds{0};
-        int32_t             minutes{0};
-        int32_t             hours{0};
-        int32_t             days{0};
+        unsigned long           timeNow{0};
+        unsigned long           timeLast{0};
+        int                     startingHour{0}; // set your starting hour here, not below at int hour. This ensures accurate daily correction of time
+        int                     seconds{0};
+        int                     minutes{0};
+        int                     hours{0};
+        int                     days{0};
 
 
-        int32_t             dailyErrorFast{0}; // set the average number of milliseconds your microcontroller's time is fast on a daily basis
-        int32_t             dailyErrorBehind{0}; // set the average number of milliseconds your microcontroller's time is behind on a daily basis
-        int32_t             correctedToday{0}; // do not change this variable, one means that the time has already been corrected today for the error in your boards crystal. This is true for the first day because you just set the time when you uploaded the sketch.  
+        int                 dailyErrorFast{0}; // set the average number of milliseconds your microcontroller's time is fast on a daily basis
+        int                 dailyErrorBehind{0}; // set the average number of milliseconds your microcontroller's time is behind on a daily basis
+        int                 correctedToday{0}; // do not change this variable, one means that the time has already been corrected today for the error in your boards crystal. This is true for the first day because you just set the time when you uploaded the sketch.  
 };
 
 

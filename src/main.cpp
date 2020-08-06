@@ -27,7 +27,7 @@
 
 McuClock g_clock{};
 CircularBuffer<std::string, 50> g_log_buf;
-std::map<int, std::unique_ptr<RelayDriver>> g_valves;
+std::map<int, std::unique_ptr<RelayDriver>> g_relays;
 std::unique_ptr<McuConfig> g_mcu_config{nullptr};
 std::unique_ptr<MoistureSensorDriver> g_moist_sensor{nullptr};
 std::unique_ptr<RainSensorDriver> g_rain_sensor{nullptr};
@@ -60,17 +60,22 @@ void setup()
 
   g_clock.doNtpSync();
 
+  configure();
+
 }
 
-void toggleValve(uint8_t number)
+void toggleValve(uint8_t pin)
 {
-  g_valves[number]->toggle();
+  g_relays[pin]->toggle();
 }
 
 void loop() 
 {
 
   g_clock.update();
+
+  //check triggers
+  handleTriggers();
 
   auto timestr = g_clock.getTimeString();
 
@@ -83,6 +88,48 @@ void loop()
 }
 
 
+void handleTriggers()
+{
+  for(auto zit = g_mcu_config->zones().begin(); zit != g_mcu_config->zones().end(); ++zit)
+  {
+      const auto& triggers = zit->second.triggers;
+      bool skip{false};
+      for(const auto& trigger : triggers)
+      {
+          if(!trigger.daysOfWeek.empty())
+          {
+            if(std::find(trigger.daysOfWeek.begin(), trigger.daysOfWeek.end(), g_clock.getDayOfWeek()) == trigger.daysOfWeek.end())
+            {
+              skip = true;
+            }
+          }
+          else if(!trigger.daysOfMonth.empty())
+          {
+            if(std::find(trigger.daysOfMonth.begin(), trigger.daysOfMonth.end(), g_clock.getDayOfMonth()) == trigger.daysOfMonth.end())
+            {
+              skip = true;
+            }
+          }
+
+          if(skip) return;
+
+          if(trigger.hour == g_clock.hour())
+          {
+            if(trigger.minute == g_clock.minute())
+            {
+              //fire
+              
+            }
+          }
+          
+          
+      }
+  }
+
+}
+
+
+
 void configure() 
 {
     g_mcu_config.reset(new McuConfig());
@@ -92,6 +139,7 @@ void configure()
     if(!exists)
     {
         g_log_buf.unshift("Mcu config file doesn't exist!");
+       // create_empty_config();
         return;
     }
     else
@@ -102,14 +150,14 @@ void configure()
     //create valve drivers
     for(const auto& valve : g_mcu_config->valves())
     {
-        auto valve_it = g_valves.find(valve.first);
-        if(valve_it != g_valves.end())
+        auto valve_it = g_relays.find(valve.second.pin);
+        if(valve_it != g_relays.end())
         {
             //update
         }
         else
         {
-          g_valves[valve.first] = std::move(std::unique_ptr<RelayDriver>(new RelayDriver(valve.second.pin)));
+          g_relays[valve.second.pin] = std::move(std::unique_ptr<RelayDriver>(new RelayDriver(valve.second.pin)));
         }
     }
 
